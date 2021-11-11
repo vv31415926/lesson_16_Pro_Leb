@@ -1,11 +1,3 @@
-'''
-Выполнить Light со следующим изменением:
-реализовать страницу определения основных навыков по определенным вакансиям (взаимодействие с hh api).
-Например, на странице представлена форма:
-город, название вакансии, кнопка. По нажатию пользователю будет показана
-средняя ЗП по данной вакансии в этом городе и список релевантных навыков
-'''
-
 from flask import Flask
 from flask import render_template, url_for, request
 import flask
@@ -14,7 +6,7 @@ from person import Person
 from my_lib import get_week
 #from parser import Parser
 from parser_price import Parser_price
-#import requests
+from head_hunter_vacancies import HeadHunter_vacancies
 
 pers = Person()
 
@@ -59,11 +51,32 @@ def price():  # результат работы парсера - цены
 
     return render_template( 'price_apartments.html', **dic )
 
-@app.route("/hh_main/" )
-def hh_main():   # начальная страница выкансий
-    return render_template('hh_city.html')
+@app.route( "/hh_main/" )
+def hh_main( ):   # начальная страница выкансий
+    return render_template( 'hh_city.html' )
 
+@app.route("/hh_vacancy/", methods=['POST'] )
+def hh_vacancy():
+    city = request.form['city']   # какой город был выбран
+    vac = request.form['vac']
 
+    hh = HeadHunter_vacancies()
+
+    lst, num, sum = hh.view_vacancies( city, vac )
+    dic={}
+    s = ''
+    for v in lst:
+        if v:
+            s += '* '+v+'\n'
+    dic['skills'] = s
+    dic['city'] = city
+    dic['vac'] = vac
+    if num == 0:
+        dic['salary'] = 0.0
+    else:
+        dic['salary'] = round( sum/num, 2 )
+
+    return render_template('hh_vacancy.html', **dic)
 
 
 
